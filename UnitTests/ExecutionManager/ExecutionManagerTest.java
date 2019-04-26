@@ -10,7 +10,8 @@ import java.util.concurrent.Callable;
 
 
 public class ExecutionManagerTest {
-    ExecutionManager executionManager = new ExecutionManager(10);
+
+    ExecutionManager executionManager = new ExecutionManager(2);
 
     private class MyRunnableStdout implements Runnable {
 
@@ -21,6 +22,11 @@ public class ExecutionManagerTest {
         @Override
         public void run() {
             System.out.println(s);
+            try {
+                this.wait(1000);
+            } catch (Exception e) {
+                //e.printStackTrace();
+            }
         }
     }
 
@@ -43,8 +49,8 @@ public class ExecutionManagerTest {
 
         Collection<Runnable> tasks = new ArrayList<>();
 
-        for (int i = 0; i < 10; i++) {
-            tasks.add(new MyRunnableStdout(i + ""));
+        for (int i = 0; i < 100; i++) {
+            tasks.add(new MyRunnableStdout( Math.random() + ""));
         }
         Runnable[] a = new Runnable[tasks.size()];
 

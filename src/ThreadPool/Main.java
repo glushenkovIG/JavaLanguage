@@ -5,7 +5,7 @@ public class Main {
         Character[] c = {'\\', '|', '/', '-'};
         int i = 0;
         while(true){
-            System.out.print("\rppido sucks " + c[i]);
+            System.out.print("\rppido " + c[i]);
             i = (i + 1) % 4;
             Thread.sleep(282);
         }
