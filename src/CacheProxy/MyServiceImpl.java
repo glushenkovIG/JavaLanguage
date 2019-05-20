@@ -3,8 +3,6 @@ package CacheProxy;
 import java.util.Date;
 import java.util.List;
 
-import static CacheProxy.MyCacheTypes.IN_MEMORY;
-
 public class MyServiceImpl implements Service {
     public List<String> run(String item, double value, Date date) {
         return null;
@@ -16,8 +14,8 @@ public class MyServiceImpl implements Service {
     }
 
     @Override
-    public double doHardWork(int a, String b) {
-        return 0;
+    public String doHardWork(int a, String b) {
+        return "HARD WORK DONE";
     }
 
     public List<String> work(String item) {

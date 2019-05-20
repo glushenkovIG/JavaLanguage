@@ -32,10 +32,11 @@ interface Service {
     @Cache(cacheType = IN_MEMORY, listList = 100_000)
     List<String> work(Object ... args);
 
-    @Cache(cacheType = IN_MEMORY,
-            fileNamePrefix = "/Users/Ivan/Documents/MIPT/6_term/BIT_Java/JavaLanguage/src/CacheProxy/TestOutput/out.txt",
+    @Cache(cacheType = FILE,
+            zip = true,
+            fileNamePrefix = "out.txt",
             listList = 100_000,
             identityBy = {int.class})
-    double doHardWork(int a, String b);
+    String doHardWork(int a, String b);
 
 }
