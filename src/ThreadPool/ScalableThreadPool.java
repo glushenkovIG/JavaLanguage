@@ -20,7 +20,7 @@ public class ScalableThreadPool {
         for(int i = 0; i < min; i++){
             Thread t = new Thread(new RunTasks(tasks));
             t.setDaemon(true);
-            t.run();
+            t.start();
         }
     }
 

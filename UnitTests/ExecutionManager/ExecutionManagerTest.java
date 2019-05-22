@@ -5,13 +5,12 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.Callable;
 
 
 
 public class ExecutionManagerTest {
 
-    ExecutionManager executionManager = new ExecutionManager(2);
+    ExecutionManager executionManager = new ExecutionManager(100);
 
     private class MyRunnableStdout implements Runnable {
 
@@ -19,42 +18,36 @@ public class ExecutionManagerTest {
         MyRunnableStdout(String s){
             this.s = s;
         }
+
         @Override
         public void run() {
-            System.out.println(s);
-            try {
-                this.wait(1000);
-            } catch (Exception e) {
-                //e.printStackTrace();
+            synchronized (this) {
+                try {
+                    this.wait(50);
+                    //System.out.println(Math.random());
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
 
-    private class MyCallableStdout implements Callable {
-
-        private String s;
-        MyCallableStdout(String s){
-            this.s = s;
-        }
-
-        @Override
-        public Object call() throws Exception {
-            System.out.println(s);
-            return null;
-        }
-    }
-
     @Test
-    public void unit1(){
+    public void unit1() throws InterruptedException {
 
         Collection<Runnable> tasks = new ArrayList<>();
 
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 3000; i++) {
             tasks.add(new MyRunnableStdout( Math.random() + ""));
         }
         Runnable[] a = new Runnable[tasks.size()];
 
-        MyRunnableStdout callable = new MyRunnableStdout("Successfully done!");
-        executionManager.execute(callable, tasks.toArray(a));
+        MyRunnableStdout runnable = new MyRunnableStdout("Successfully done!");
+        //System.out.println((tasks.toArray(a)).length);
+        executionManager.execute(runnable, tasks.toArray(a));
+    }
+    @Test
+    public void unit2(){
+        new Thread(()-> System.out.println("im very alive")).start();
     }
 }

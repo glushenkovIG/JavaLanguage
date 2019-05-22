@@ -8,65 +8,77 @@ public class ExecutionManager {
 
     public ExecutionManager(int threadCount){
         this.threadCount = threadCount;
+        System.out.println("Constructor");
     }
 
-    public Context execute(Runnable callback, Runnable[] tasks){
+    public Context execute(Runnable callback, Runnable[] tasks_) throws InterruptedException {
 
         Counter succeed = new Counter();
         Counter failed = new Counter();
-        Counter threadsFinished = new Counter();
 
-        List<Thread> threads = new ArrayList<>();
-        Queue<Runnable> tasks1 = new ConcurrentLinkedQueue<>(Arrays.asList(tasks));
+        Queue<Runnable> tasks = new ConcurrentLinkedQueue<>(Arrays.asList(tasks_));
 
-        for(int i = 0; i < threadCount; i++)
-            threads.add(new Thread(new RunThreadWithCallback(tasks1, succeed, failed, threadsFinished, threadCount, callback)));
+        Context context = new Context(tasks, failed, succeed);
+        Runnable r;
 
-        Context context = new Context(tasks1, failed, succeed);
+        Counter startedThreadsCounter = new Counter();
+        Counter terminatedThreadsCounter = new Counter();
 
-        for(Thread thread : threads)
-            thread.run();
+        while((r = tasks.poll()) != null){
+            while(startedThreadsCounter.get() - terminatedThreadsCounter.get() >= threadCount){
+               synchronized (this) {
+                   this.wait(10);
+               }
+            }
+            Thread t = new Thread(new RunThreadWithCallback(r, succeed, failed, threadCount, callback, terminatedThreadsCounter));
+            startedThreadsCounter.add();
+            t.start();
+
+            System.out.println(startedThreadsCounter.get() - terminatedThreadsCounter.get());
+            if (succeed.get() + failed.get() ==  tasks_.length){
+                callback.run();
+            }
+        }
 
         return context;
     }
 }
 
-class RunThreadWithCallback implements Runnable{
+class RunThreadWithCallback implements Runnable {
 
-    private Queue<Runnable> tasks;
+    private Runnable task;
 
     private Counter succeed;
     private Counter failed;
-    private Counter threadsFinished;
+    private Counter terminatedThreadsCounter;
 
     private int threadsCount;
 
     private Runnable callback;
 
-    RunThreadWithCallback(Queue<Runnable> tasks, Counter succeed, Counter failed, Counter threadsFinished, int threadsCount, Runnable callback){
-        this.tasks = tasks;
+    RunThreadWithCallback(Runnable task, Counter succeed, Counter failed, int threadsCount,
+                          Runnable callback, Counter terminatedThreadsCounter) {
+        this.task = task;
         this.succeed = succeed;
         this.failed = failed;
-        this.threadsFinished = threadsFinished;
         this.threadsCount = threadsCount;
         this.callback = callback;
+        this.terminatedThreadsCounter = terminatedThreadsCounter;
     }
 
     @Override
     public void run(){
-        Runnable r;
-        while((r = tasks.poll()) != null){
-            try{
-                r.run();
-                succeed.add();
+        try{
+            Thread t = new Thread(task);
+            t.start();
+            synchronized (this){
+                wait(40);
             }
-            catch(Exception e){
-                failed.add();
-            }
+            succeed.add();
+        } catch (Exception e){
+            failed.add();
         }
-
-        if(threadsCount == threadsFinished.addAndGet())
-            callback.run();
+        terminatedThreadsCounter.add();
     }
 }
 
